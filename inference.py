@@ -6,6 +6,8 @@ import numpy as np
 import tensorflow as tf
 from scipy.signal.windows import hann
 
+from matplotlib.widgets import Slider
+
 import config
 from processing.data_utils import WAV
 
@@ -55,6 +57,30 @@ for file in wavList:
     line2, = plt.plot(labels, label="Labels")
     line1, = plt.plot(t, predictions, label="Predictions")
 
+    plt.subplots_adjust(bottom=0.2)
+    sliderax = plt.axes([0.25, 0.1, 0.65, 0.03])
+    rounding_slider = Slider(
+        ax=sliderax,
+        label='Rounding threshold',
+        valmin=0.0,
+        valmax=1.0,
+        valinit=config.ROUNDING_THRESHOLD
+    )
+
+    def update(val):
+        length = len(predictions)
+        res = np.zeros(length)
+        for i in range(length):
+            if predictions[i] > val:
+                res[i] = 1
+            else:
+                res[i] = 0
+        line1.set_ydata(res)
+        fig.canvas.draw_idle()
+
+    update(config.ROUNDING_THRESHOLD)
+
+    rounding_slider.on_changed(update)
 
     plt.legend()
     plt.show()
