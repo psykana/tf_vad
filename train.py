@@ -64,4 +64,10 @@ test_scores = model.evaluate(ds_test)
 print("Test loss:", test_scores[0])
 print("Test accuracy:", test_scores[1])
 
-model.save(config.MODELS_DIR + "/" + timestamp)
+model_dir = config.MODELS_DIR + "/" + timestamp
+model.save(model_dir)
+
+converter = tf.lite.TFLiteConverter.from_keras_model(model)
+tflite_model = converter.convert()
+with open(model_dir + "/" + 'model.tflite', 'wb') as f:
+    f.write(tflite_model)
