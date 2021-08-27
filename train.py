@@ -35,7 +35,7 @@ ds_train = ds_train.prefetch(128)
 
 model = keras.Sequential(
     [
-        layers.InputLayer(513),
+        layers.InputLayer(513, dtype='float32'),
         layers.Dense(513, activation="relu", name="layer1"),
         layers.Dense(513, activation="relu", name="layer2"),
         layers.Dense(513, activation="relu", name="layer3"),

@@ -36,6 +36,7 @@ def custom_f1(y_true, y_pred):
 wavList = [f for f in os.listdir(config.INFERENCE_DIR) if f.endswith('.WAV')]
 if len(wavList) < 1:
   raise ValueError('No WAVs found')
+wavList = sorted(wavList)
 
 # with tf.keras.utils.custom_object_scope({'Precision': tf.keras.metrics.Precision(), 'Recall': tf.keras.metrics.Recall()}):
 model = tf.keras.models.load_model(config.INF_MODEL, custom_objects={'custom_f1': custom_f1})

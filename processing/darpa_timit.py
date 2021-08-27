@@ -23,17 +23,16 @@ class DARPA_TIMIT(tfds.core.GeneratorBasedBuilder):
 			builder=self,
 			description=_DESCRIPTION,
 			features=tfds.features.FeaturesDict({
-				"fft": tfds.features.Tensor(shape=(config.TENSOR_SHAPE,), dtype=tf.float32),
+				"psd": tfds.features.Tensor(shape=(config.TENSOR_SHAPE,), dtype=tf.float32),
 				"label": tfds.features.ClassLabel(num_classes=2),
 			}),
-			supervised_keys=("fft", "label"),
+			supervised_keys=("psd", "label"),
 			citation=_CITATION,
 		)
 
 	def _split_generators(self, dl_manager):
 		"""Returns SplitGenerators."""
 		path = config.PREPROCESSED_DIR
-		# There is no predefined train/val/test split for this dataset.
 		return [
 			tfds.core.SplitGenerator(
 				name=tfds.Split.TRAIN,
@@ -77,7 +76,7 @@ class DARPA_TIMIT(tfds.core.GeneratorBasedBuilder):
 						psd.reshape((1, 513))
 						key = '.'.join([metaData, trackFrameNum])
 						example = {
-							"fft": psd,
+							"psd": psd,
 							"label": label,
 						}
 						yield key, example
