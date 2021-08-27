@@ -1,4 +1,6 @@
 import os
+import time
+start_time = time.time()
 
 import keras.backend as K
 import matplotlib.pyplot as plt
@@ -38,8 +40,16 @@ if len(wavList) < 1:
 # with tf.keras.utils.custom_object_scope({'Precision': tf.keras.metrics.Precision(), 'Recall': tf.keras.metrics.Recall()}):
 model = tf.keras.models.load_model(config.INF_MODEL, custom_objects={'custom_f1': custom_f1})
 
+print("Init: --- %s seconds ---" % (time.time() - start_time))
+try:
+    os.remove('predictions.txt')
+except OSError:
+    pass
+
 window = hann(config.FRAMESIZE)
 for file in wavList:
+    start_time = time.time()
+    print(file + ": ", end="")
     wav = WAV(config.INFERENCE_DIR, file)
     labels = wav.getLabels()
     predictions = np.zeros(wav.frameNum, dtype='float32')
@@ -49,6 +59,8 @@ for file in wavList:
         psd = wav.getPsd(frame)
         psd = psd.reshape((1, config.TENSOR_SHAPE))
         predictions[wav.curFrame] = model(psd)
+
+    print("--- %s seconds ---" % (time.time() - start_time))
 
     fig, ax = plt.subplots()
     wav_norm = wav.data * 1.0 / (max(abs(wav.data)))
@@ -84,3 +96,6 @@ for file in wavList:
 
     plt.legend()
     plt.show()
+
+    with open("predictions.txt", 'a') as out:
+        np.savetxt(out, predictions, fmt='%.4e', encoding='bytes')
