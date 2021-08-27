@@ -15,7 +15,7 @@ class WAV:
 		self.fnameStripped = self.fname[:-4]
 		self.srate, self.data, self.length, self.frameNum = self.openFile()
 		self.voiceRanges = self.getVoiceRanges()
-		self.curFrame = 0
+		self.curFrame = -1
 
 	def openFile(self):
 		srate, data = scipy.io.wavfile.read(os.path.join(self.root, self.fname))
@@ -54,10 +54,10 @@ class WAV:
 			return None # ???
 
 	def getNextFrame(self):
-		if self.curFrame in range(0, self.frameNum):
+		if self.curFrame in range(-1, self.frameNum):
+			self.curFrame = self.curFrame + 1
 			frame = self.getFrame(self.curFrame)
 			label = self.getFrameLabel(self.curFrame)
-			self.curFrame = self.curFrame + 1
 			return frame, label
 		return None # ???
 
