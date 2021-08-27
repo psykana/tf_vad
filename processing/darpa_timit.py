@@ -4,6 +4,7 @@ import sys
 import numpy as np
 import tensorflow as tf
 import tensorflow_datasets as tfds
+from scipy.signal.windows import hann
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
@@ -61,6 +62,7 @@ class DARPA_TIMIT(tfds.core.GeneratorBasedBuilder):
 		Yields:
 		   Next examples
 		"""
+		window = hann(config.FRAMESIZE)  # Hann window
 		for root, _, file_name in tf.io.gfile.walk(path):
 			for fname in file_name:
 				if fname.endswith(".WAV"):
@@ -70,13 +72,12 @@ class DARPA_TIMIT(tfds.core.GeneratorBasedBuilder):
 					while wav.curFrame < wav.frameNum - 1:
 						trackFrameNum = str(wav.curFrame).zfill(5)
 						frame, label = wav.getNextFrame()
-						t, f, Sxx = wav.getSpectro(frame)
-						Sxx = np.float32(Sxx)
-						Sxx_tensor = Sxx[:, 0]
-						Sxx_tensor.reshape(1, 513)
+						frame = np.multiply(frame, window)
+						psd = wav.getPsd(frame)
+						psd.reshape((1, 513))
 						key = '.'.join([metaData, trackFrameNum])
 						example = {
-							"fft": Sxx_tensor,
+							"fft": psd,
 							"label": label,
 						}
 						yield key, example

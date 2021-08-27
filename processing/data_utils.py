@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 import scipy.io.wavfile
-from scipy import signal
+from scipy.fft import rfft
 
 import config
 
@@ -61,11 +61,12 @@ class WAV:
 			return frame, label
 		return None # ???
 
-	def getSpectro(self, frame):
-		paddedFrame = np.zeros(config.NFFT_SIZE)
+	def getPsd(self, frame):
+		paddedFrame = np.zeros(config.NFFT_SIZE, dtype='float32')
 		paddedFrame[0:config.FRAMESIZE] = frame
-		f, t, Sxx = signal.spectrogram(paddedFrame, self.srate, config.WINDOW, nperseg=config.FRAMESIZE, nfft=config.NFFT_SIZE, noverlap=config.NFFT_OVERLAP)
-		return f, t, Sxx
+		bins = rfft(paddedFrame)
+		psd = np.square(abs(bins))
+		return psd
 
 	def getLabels(self):
 		labels = np.zeros(self.length)
