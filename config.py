@@ -11,6 +11,7 @@ WINDOW = 'hamming'
 TENSOR_SHAPE = int(NFFT_SIZE / 2) + 1
 
 EPOCHS = 10
+LEARNING_RATE = 0.001
 ROUNDING_THRESHOLD = 0.7
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))

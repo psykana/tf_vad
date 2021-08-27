@@ -42,9 +42,9 @@ model = keras.Sequential(
         layers.Dense(1, activation="sigmoid", name="layer4"),
     ]
 )
-#model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy', 'TruePositives', 'TrueNegatives', 'FalsePositives', 'FalseNegatives'])
-#model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy', Precision(), Recall()])
-model.compile(loss='binary_crossentropy', optimizer='adam', metrics=[custom_f1])
+
+model.compile(loss='binary_crossentropy', optimizer=keras.optimizers.Adam(learning_rate=config.LEARNING_RATE),
+              metrics=[custom_f1])
 
 timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 log_dir = "logs/fit/" + timestamp
