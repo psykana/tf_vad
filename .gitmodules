@@ -1,0 +1,6 @@
+[submodule "inference_src/AudioFile"]
+	path = inference_src/AudioFile
+	url = https://github.com/adamstark/AudioFile
+[submodule "inference_src/tensorflow"]
+	path = inference_src/tensorflow
+	url = https://github.com/tensorflow/tensorflow
