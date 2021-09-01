@@ -8,4 +8,5 @@ data/raw/*
 logs/*
 models/*
 processing/__pycache__
+build/*
 !/**/.gitkeep
