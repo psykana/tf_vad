@@ -3,6 +3,7 @@ import os
 import numpy as np
 import scipy.io.wavfile
 from scipy.fft import rfft
+from scipy.signal.windows import hann
 
 import config
 
@@ -65,7 +66,7 @@ class WAV:
 		paddedFrame = np.zeros(config.NFFT_SIZE, dtype='float32')
 		paddedFrame[0:config.FRAMESIZE] = frame
 		bins = rfft(paddedFrame)
-		psd = np.square(abs(bins))
+		psd = abs(bins)
 		return psd
 
 	def getLabels(self):
@@ -74,3 +75,46 @@ class WAV:
 			if any(start <= i <= end for (start, end) in self.voiceRanges):
 				labels[i] = 1
 		return labels
+
+
+def dumpModel(filename, model, path=None):
+	window = hann(config.FRAMESIZE)
+	if path == None:
+			path = config.ROOT_DIR
+	dimensions = " "
+	with open(os.path.join(path, filename), "w") as file:
+		file.write('#ifdef __cplusplus\n'
+							'extern "C" {\n'
+							'#endif\n\n')
+		file.write('static const int N = 1024;\n'
+								'static const int LAYERS = 4;\n'
+							 'static const int numBins = 513;\n\n')
+		for i in range(len(model.layers)):
+			weights, biases = model.layers[i].get_weights()
+			weights = np.transpose(weights)
+			input_size, output_size = weights.shape
+			dimensions = dimensions + str(input_size) + ", "
+			if (input_size) > 1:
+				file.write('static const float weights{num}[][{len}] = {{\n'.format(num=i, len=input_size))
+			else:
+				file.write('static const float weights{num}[] = {{\n'.format(num=i))
+			np.savetxt(file, weights.astype('float'), fmt='%f,')
+			file.write('}};\n'
+										'static const unsigned int weights{num}_xlen = {data_xlen};\n'
+                    'static const unsigned int weights{num}_ylen = {data_ylen};\n\n'
+                    .format(num=i, data_xlen=input_size, data_ylen=output_size)
+				)
+			file.write('static const float biases{num}[] = {{\n'.format(num=i))
+			np.savetxt(file, biases.astype('float'), fmt='\t%f,')
+			file.write('}};\n'
+									'static const unsigned int biases{num}_len = {len};\n\n'
+									.format(num=i, len=len(biases)))
+		file.write('static const float hannWindow[] = {\n')
+		np.savetxt(file, window.astype('float'), fmt='\t%f,')
+		file.write('}};\n'
+							 'static const unsigned int hannWindow_len = {len};\n\n'
+							 .format(len=len(biases)))
+		file.write('static const float dimensions[] = {{{layer_dimensions}}};\n\n'.format(layer_dimensions=dimensions))
+		file.write('#ifdef __cplusplus\n'
+								'}\n'
+								'#endif\n')

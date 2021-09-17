@@ -7,6 +7,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 import config
+from processing.data_utils import dumpModel
 
 
 def custom_f1(y_true, y_pred):
@@ -66,6 +67,8 @@ print("Test accuracy:", test_scores[1])
 
 model_dir = config.MODELS_DIR + "/" + timestamp
 model.save(model_dir)
+
+dumpModel("model.h", model, model_dir)
 
 converter = tf.lite.TFLiteConverter.from_keras_model(model)
 tflite_model = converter.convert()
