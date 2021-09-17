@@ -7,6 +7,8 @@
 
 #include <fftw3.h>
 
+#include <chrono>
+
 #include "tensorflow/lite/interpreter.h"
 #include "tensorflow/lite/kernels/register.h"
 #include "tensorflow/lite/model.h"
@@ -35,6 +37,12 @@ class FlatBufferModel {
 };
 
 int main() {
+
+	using std::chrono::high_resolution_clock;
+	using std::chrono::duration_cast;
+	using std::chrono::duration;
+	using std::chrono::milliseconds;
+	
 	const std::string path = "SA1.WAV";
 	const int N = 1024;
 	const int numBins = (N / 2) + 1;
@@ -43,26 +51,26 @@ int main() {
 	const int step = frameSize - overlap;
 	const int channel = 0;
 
-	double* in;
-	in = (double*)fftw_malloc(sizeof(double) * N);
+	float* in;
+	in = (float*)fftwf_malloc(sizeof(float) * N);
 	memset(in, 0, N * sizeof(in[0]));
 
-	double* hann;
-	hann = (double*)malloc(sizeof(double) * frameSize);
+	float* hann;
+	hann = (float*)malloc(sizeof(float) * frameSize);
 	for (int i = 0; i < frameSize; i++) {
 		hann[i] = 0.5 * (1 - cos(2 * M_PI * i / (frameSize - 1)));
 	}
 
-	double* bins;
-	bins = (double*)malloc(sizeof(double) * numBins);
+	float* bins;
+	bins = (float*)malloc(sizeof(float) * numBins);
 
-	fftw_complex* out;
-	out = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * numBins);
+	fftwf_complex* out;
+	out = (fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex) * numBins);
 
-	fftw_plan p;
-	p = fftw_plan_dft_r2c_1d(N, in, out, FFTW_ESTIMATE);
+	fftwf_plan p;
+	p = fftwf_plan_dft_r2c_1d(N, in, out, FFTW_ESTIMATE);
 
-	AudioFile<double> audioFile;
+	AudioFile<float> audioFile;
 	audioFile.load(path);
 	audioFile.printSummary();
 
@@ -82,14 +90,11 @@ int main() {
 	TFLITE_MINIMAL_CHECK(interpreter != nullptr);
 
 	TFLITE_MINIMAL_CHECK(interpreter->AllocateTensors() == kTfLiteOk);
-	//printf("=== Pre-invoke Interpreter State ===\n");
-	//tflite::PrintInterpreterState(interpreter.get());
 
 	float* input_data_ptr = interpreter->typed_input_tensor<float>(0);
 	float* output_data_ptr = interpreter->typed_output_tensor<float>(0);
 
-	std::ofstream txt;
-	txt.open("result.txt", std::ios::out | std::ios::trunc);
+	auto t1 = high_resolution_clock::now();
 
 	for (int i = 0; i < frameNum; i++) {
 		int offset = int(i * step);
@@ -99,13 +104,12 @@ int main() {
 			in[j] = in[j] * hann[j];
 		}
 
-		fftw_execute(p);
+		fftwf_execute(p);
 
 		for (int k = 0; k < (N / 2) + 1; k++) {
-			double realVal = out[k][0];
-			double imagVal = out[k][1];
-			bins[k] = realVal * realVal + imagVal * imagVal;
-			//std::cout << k << ": " << bins[k] << std::endl;
+			float realVal = out[k][0];
+			float imagVal = out[k][1];
+			bins[k] = sqrt(realVal * realVal + imagVal * imagVal);
 		}
 
 		// Fill `input`.
@@ -117,16 +121,25 @@ int main() {
 		}
 
 		TFLITE_MINIMAL_CHECK(interpreter->Invoke() == kTfLiteOk);
-		//printf("\n\n=== Post-invoke Interpreter State ===\n");
-		//tflite::PrintInterpreterState(interpreter.get());
 
-		txt << *output_data_ptr << std::endl;
+		//std::cout << *output_data_ptr << std::endl;
 	}
+	
+	auto t2 = high_resolution_clock::now();
 
-	txt.close();
-	fftw_destroy_plan(p);
-	fftw_free(in);
-	fftw_free(out);
+	/* Getting number of milliseconds as an integer. */
+	auto ms_int = duration_cast<milliseconds>(t2 - t1);
+
+	/* Getting number of milliseconds as a double. */
+	duration<double, std::milli> ms_double = t2 - t1;
+
+	std::cout << ms_int.count() << "ms\n";
+	std::cout << ms_double.count()/frameNum << "ms/frame\n";
+
+	//txt.close();
+	fftwf_destroy_plan(p);
+	fftwf_free(in);
+	fftwf_free(out);
 	free(bins);
 	return 0;
 }
