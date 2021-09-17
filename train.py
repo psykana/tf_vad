@@ -29,6 +29,7 @@ def custom_f1(y_true, y_pred):
 
     return 2 * ((precision * recall) / (precision + recall + K.epsilon()))
 
+
 ds_train = tfds.load('darpa_timit:1.0.0', split='train', as_supervised=True, batch_size=64)
 ds_test = tfds.load('darpa_timit:1.0.0', split='test', as_supervised=True, batch_size=64)
 ds_val = tfds.load('darpa_timit:1.0.0', split='validation', as_supervised=True, batch_size=64)
@@ -51,7 +52,7 @@ timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 log_dir = "logs/fit/" + timestamp
 tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
 
-#tf.debugging.set_log_device_placement(True)
+# tf.debugging.set_log_device_placement(True)
 
 history = model.fit(
     ds_train,

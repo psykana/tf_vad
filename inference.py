@@ -1,5 +1,6 @@
 import os
 import time
+
 start_time = time.time()
 
 import keras.backend as K
@@ -33,9 +34,10 @@ def custom_f1(y_true, y_pred):
 
     return 2 * ((precision * recall) / (precision + recall + K.epsilon()))
 
+
 wavList = [f for f in os.listdir(config.INFERENCE_DIR) if f.endswith('.WAV')]
 if len(wavList) < 1:
-  raise ValueError('No WAVs found')
+    raise ValueError('No WAVs found')
 wavList = sorted(wavList)
 
 # with tf.keras.utils.custom_object_scope({'Precision': tf.keras.metrics.Precision(), 'Recall': tf.keras.metrics.Recall()}):
@@ -80,6 +82,7 @@ for file in wavList:
         valinit=config.ROUNDING_THRESHOLD
     )
 
+
     def update(val):
         length = len(predictions)
         res = np.zeros(length)
@@ -90,6 +93,7 @@ for file in wavList:
                 res[i] = 0
         line1.set_ydata(res)
         fig.canvas.draw_idle()
+
 
     update(config.ROUNDING_THRESHOLD)
 
